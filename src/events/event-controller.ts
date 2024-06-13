@@ -1,6 +1,9 @@
+
 import { Request, Response } from 'express';
 import { CreateEventDto } from './dtos/CreateEvent.dot';
 import EventService from './event-service';
+import UserModel from '../auth/models/User';
+
 
 class EventController {
     private eventService : EventService;
@@ -24,7 +27,11 @@ class EventController {
 
     getEvents = async (req: Request, res: Response): Promise<void> => {
         try {
-          const events = await this.eventService.getEvents();
+          const { page, size, sortBy, sortDirection } = req.query;
+
+          const user = await UserModel.findById((req.user as any).id).exec();
+
+          const events = await this.eventService.getEvents(user?.city, Number(page), Number(size), String(sortBy), String(sortDirection));
           res.status(200).json(events);
         } catch (error: any) {
           res.status(500).send({ error: error.message });
